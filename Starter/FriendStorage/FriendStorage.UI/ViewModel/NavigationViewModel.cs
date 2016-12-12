@@ -5,18 +5,24 @@ using System.Collections.ObjectModel;
 
 namespace FriendStorage.UI.ViewModel
 {
-    public class NavigationViewModel : ViewModelBase
+    public interface INavigationViewModel
     {
+        void Load();
+    }
+    public class NavigationViewModel : ViewModelBase , INavigationViewModel
+    {
+        
         private INavigationDataProvider _dataService;
-        public ObservableCollection<Friend> Friends { get; private set; }
+        public ObservableCollection<LookUpItem> Friends { get; private set; }
 
         public NavigationViewModel(INavigationDataProvider dataService)
         {
             _dataService = dataService;
-            Friends = new ObservableCollection<Friend>();
+            Friends = new ObservableCollection<LookUpItem>();
         }     
         public void Load()
         {
+            Friends.Clear();
            foreach(var friend in _dataService.GetAllFriends())
             {
                 Friends.Add(friend);

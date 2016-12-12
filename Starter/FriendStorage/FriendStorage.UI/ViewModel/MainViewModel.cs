@@ -8,12 +8,11 @@ namespace FriendStorage.UI.ViewModel
 {
   public class MainViewModel : ViewModelBase
   {
-        public MainViewModel()
+        public INavigationViewModel NavigationViewModel { get; private set; }
+        public MainViewModel(INavigationViewModel navigationViewModel)
         {
-            //var repository = new FileDataService();
-            //NavigationViewModel = new NavigationViewModel(repository);
-        }
-        public NavigationViewModel NavigationViewModel { get; private set; }
+            NavigationViewModel = navigationViewModel;
+        }      
         public void Load()
         {
             NavigationViewModel.Load();

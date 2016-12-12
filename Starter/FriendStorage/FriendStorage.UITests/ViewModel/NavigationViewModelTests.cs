@@ -5,6 +5,7 @@ using FriendStorage.UI.ViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FriendStorage.UITests.ViewModel
 {
@@ -21,18 +22,32 @@ namespace FriendStorage.UITests.ViewModel
             var navigationVM = new NavigationViewModel(fakeRepository);
             navigationVM.Load();
 
-            Assert.AreEqual(navigationVM.Friends.Count, 1);
+            Assert.AreEqual(navigationVM.Friends.Count, 2);
+            var friend = navigationVM.Friends.SingleOrDefault(f => f.Id == 1);
+            Assert.IsNotNull(friend);
+            Assert.AreEqual(friend.DisplayMember,"Wahab Shah");
+
+            friend = navigationVM.Friends.SingleOrDefault(f => f.Id == 2);
+            Assert.IsNotNull(friend);
+            Assert.AreEqual(friend.DisplayMember, "Sajid Khan");
+        }
+        [TestMethod]
+        public void ShouldLoadFriendsOnlyOnce()
+        {
+            var fakeRepository = new NavigationDataProviderMock();
+            var navigationVM = new NavigationViewModel(fakeRepository);
+            navigationVM.Load();
+            navigationVM.Load();
+
+            Assert.AreEqual(navigationVM.Friends.Count, 2);
         }
     }
     public class NavigationDataProviderMock : INavigationDataProvider
     {
-        public IEnumerable<Friend> GetAllFriends()
+        public IEnumerable<LookUpItem> GetAllFriends()
         {
-            List<Friend> friends = new List<Friend>()
-            {
-                new Friend() {FirstName="Wahab" ,LastName="Shah"}
-            };
-            return friends;
+            yield return new LookUpItem() {Id=1, DisplayMember = "Wahab Shah" };
+            yield return new LookUpItem() {Id=2, DisplayMember = "Sajid Khan"};
         }
     }
 }
