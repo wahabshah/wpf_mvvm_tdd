@@ -1,32 +1,58 @@
-﻿using FriendStorage.UI.ViewModel;
+﻿using System;
+using FriendStorage.UI.ViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+using Moq;
+using Prism.Events;
+using FriendStorage.UI.Events;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FriendStorage.UITests.ViewModel
 {
     [TestClass]
     public class MainViewModelTests
     {
+        private Mock<IEventAggregator> _eventAggregatorStub;
+        private OpenFriendEditViewEvent _openFriendEditViewEvent;
+        public MainViewModel _mainViewModel { get; set; }
+        public Mock<INavigationViewModel> _navigationViewModelMock { get; set; }
+        private List<Mock<IFriendEditViewModel>> _friendEditViewModelMocks;
+        public void MainViewModelTests_Setup()
+        {
+            _navigationViewModelMock = new Mock<INavigationViewModel>();
+            _eventAggregatorStub = new Mock<IEventAggregator>();
+            _openFriendEditViewEvent = new Mock<OpenFriendEditViewEvent>().Object;
+            _eventAggregatorStub.Setup(ea => ea.GetEvent<OpenFriendEditViewEvent>()).Returns(_openFriendEditViewEvent);
+            _friendEditViewModelMocks = new List<Mock<IFriendEditViewModel>>();
+            _mainViewModel = new MainViewModel(_navigationViewModelMock.Object,CreateFreindEditVieModel, _eventAggregatorStub.Object);
+        }
+
+        private IFriendEditViewModel CreateFreindEditVieModel()
+        {
+            var friendEditViewModelMock = new Mock<IFriendEditViewModel>();
+            _friendEditViewModelMocks.Add(friendEditViewModelMock);
+            return friendEditViewModelMock.Object;
+        }
+
         [TestMethod]
         public void ShouldCallLoadMethodOfNavigationalViewModel()
         {
-            var navigationViewModelMock = new NavigationViewModelMock();
-            var mainViewModel = new MainViewModel(navigationViewModelMock);
-            mainViewModel.Load();
+            MainViewModelTests_Setup();          
+            _mainViewModel.Load();
 
-            Assert.IsTrue(navigationViewModelMock.LoadHasBeenCalled);
+            _navigationViewModelMock.Verify(vm=>vm.Load(),Times.Once);
         }
-        public class NavigationViewModelMock : INavigationViewModel
+        [TestMethod]
+        public void ShouldAddFriendEditViewModelAndLoadAndSelectIt()
         {
-            public bool LoadHasBeenCalled { get; set; }
-            public void Load()
-            {
-                LoadHasBeenCalled = true;
-            }
+            MainViewModelTests_Setup();
+            const int friendId = 7;
+            _openFriendEditViewEvent.Publish(friendId);
+
+            Assert.AreEqual(1, _mainViewModel.FriendEditViewModels.Count);
+            var friendEditVM = _mainViewModel.FriendEditViewModels.First();
+            Assert.AreEqual(friendEditVM, _mainViewModel.SelectedFriendEditViewModel);
+            _friendEditViewModelMocks.First().Verify(vm => vm.Load(), Times.Once);
         }
     }
 }
