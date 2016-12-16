@@ -6,6 +6,7 @@ using Prism.Events;
 using FriendStorage.UI.Events;
 using System.Collections.Generic;
 using System.Linq;
+using FriendStorage.UITests.Extensions;
 
 namespace FriendStorage.UITests.ViewModel
 {
@@ -16,20 +17,23 @@ namespace FriendStorage.UITests.ViewModel
         private OpenFriendEditViewEvent _openFriendEditViewEvent;
         public MainViewModel _mainViewModel { get; set; }
         public Mock<INavigationViewModel> _navigationViewModelMock { get; set; }
-        private List<Mock<IFriendEditViewModel>> _friendEditViewModelMocks;
+        private List<Mock<IFriendEditViewModel>> _friendEditViewModelMocks;  /* To store return type of Func to create IFriendEditViewModel*/
         public void MainViewModelTests_Setup()
         {
             _navigationViewModelMock = new Mock<INavigationViewModel>();
             _eventAggregatorStub = new Mock<IEventAggregator>();
-            _openFriendEditViewEvent = new Mock<OpenFriendEditViewEvent>().Object;
+            _openFriendEditViewEvent = new OpenFriendEditViewEvent();
             _eventAggregatorStub.Setup(ea => ea.GetEvent<OpenFriendEditViewEvent>()).Returns(_openFriendEditViewEvent);
             _friendEditViewModelMocks = new List<Mock<IFriendEditViewModel>>();
-            _mainViewModel = new MainViewModel(_navigationViewModelMock.Object,CreateFreindEditVieModel, _eventAggregatorStub.Object);
+            _mainViewModel = new MainViewModel(_navigationViewModelMock.Object,CreateFriendEditVieModel, _eventAggregatorStub.Object);
         }
 
-        private IFriendEditViewModel CreateFreindEditVieModel()
+        private IFriendEditViewModel CreateFriendEditVieModel()
         {
             var friendEditViewModelMock = new Mock<IFriendEditViewModel>();
+            friendEditViewModelMock.Setup(fEVM => fEVM.Load(It.IsAny<int>())).Callback<int>((friendId)=> {
+            friendEditViewModelMock.Setup(fEVM => fEVM.Friend).Returns(new Model.Friend() { Id = friendId }); });
+           
             _friendEditViewModelMocks.Add(friendEditViewModelMock);
             return friendEditViewModelMock.Object;
         }
@@ -52,7 +56,29 @@ namespace FriendStorage.UITests.ViewModel
             Assert.AreEqual(1, _mainViewModel.FriendEditViewModels.Count);
             var friendEditVM = _mainViewModel.FriendEditViewModels.First();
             Assert.AreEqual(friendEditVM, _mainViewModel.SelectedFriendEditViewModel);
-            _friendEditViewModelMocks.First().Verify(vm => vm.Load(), Times.Once);
+            _friendEditViewModelMocks.First().Verify(vm => vm.Load(friendId), Times.Once);
+        }
+        [TestMethod]
+        public void ShouldAddFriendEditViewModelOnce()
+        {
+            MainViewModelTests_Setup();
+            const int friendId = 7;
+            _openFriendEditViewEvent.Publish(friendId);
+            _openFriendEditViewEvent.Publish(friendId);
+
+            Assert.AreEqual(1, _mainViewModel.FriendEditViewModels.Count);
+        }
+        [TestMethod]
+        public void ShouldRaisePropertyChangedEventForSelectedFriendEditViewModel()
+        {
+            MainViewModelTests_Setup();
+            var friendEditVMStub = new Mock<IFriendEditViewModel>();
+            Action action = () =>
+            {
+                 _mainViewModel.SelectedFriendEditViewModel = friendEditVMStub.Object;
+            };
+           var isFired =  _mainViewModel.IsPropertyChangedFired(action, nameof(_mainViewModel.SelectedFriendEditViewModel));
+            Assert.IsTrue(isFired);
         }
     }
 }

@@ -22,15 +22,11 @@ namespace FriendStorage.UI
             // MainViewModel mainViewModel = new MainViewModel(navigationViewModel);
             //var mainWindow = new MainWindow(mainViewModel);
 
-            using (var kernel = new StandardKernel(new CoreModule()))
-            {
-               kernel.Bind<Func<IDataService>>().ToMethod(
-               context =>
-               () => kernel.Get<FileDataService>());
 
-                var mainWindow = kernel.Get<MainWindow>();
+                var Kernel = CoreModule.Bootstrapper();
+                var mainWindow = Kernel.Get<MainWindow>();
                 mainWindow.Show();
-            }      
+                 
         }
     }
 }

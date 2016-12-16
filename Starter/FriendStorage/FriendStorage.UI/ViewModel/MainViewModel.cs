@@ -7,6 +7,7 @@ using FriendStorage.UI.DataProvider;
 using Prism.Events;
 using FriendStorage.UI.Events;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace FriendStorage.UI.ViewModel
 {
@@ -15,7 +16,7 @@ namespace FriendStorage.UI.ViewModel
         private IEventAggregator _eventAggregator;
 
         public INavigationViewModel NavigationViewModel { get; private set; }
-        public ObservableCollection<FriendEditViewModel> FriendEditViewModels{get;set;}
+        public ObservableCollection<IFriendEditViewModel> FriendEditViewModels{get;set;}
         public IFriendEditViewModel _selectedFriendEditViewModel;
         private Func<IFriendEditViewModel> _friendEditVMCreator;
 
@@ -27,24 +28,34 @@ namespace FriendStorage.UI.ViewModel
             }
             set
             {
-                _selectedFriendEditViewModel = value;
+                _selectedFriendEditViewModel = value;              
+                OnPropertyChanged();
             }
         }
 
-        public MainViewModel(INavigationViewModel navigationViewModel,Func<IFriendEditViewModel> friendEditVMCreator,IEventAggregator eventAggregator)
+        public MainViewModel(INavigationViewModel navigationViewModel,
+                             Func<IFriendEditViewModel> friendEditVMCreator,
+                             IEventAggregator eventAggregator)
         {
             NavigationViewModel = navigationViewModel;
-            FriendEditViewModels = new ObservableCollection<FriendEditViewModel>();
+            FriendEditViewModels = new ObservableCollection<IFriendEditViewModel>();
             _friendEditVMCreator = friendEditVMCreator;       
             _eventAggregator = eventAggregator;
             //subscribe
             //PropertyChanged += FriendEditViewModel_PropertyChanged;
-            _eventAggregator.GetEvent<OpenFriendEditViewEvent>().Subscribe(ShowFriend);
+            _eventAggregator.GetEvent<OpenFriendEditViewEvent>().Subscribe(OnOpenFriendEditView);
         }
 
-        private void ShowFriend(int friendId)
+        private void OnOpenFriendEditView(int friendId)
         {
-            throw new NotImplementedException();
+            var friendVM = FriendEditViewModels.SingleOrDefault(fVM => fVM.Friend.Id == friendId);
+            if (friendVM == null)
+            {
+                friendVM = _friendEditVMCreator();
+                FriendEditViewModels.Add(friendVM);
+                friendVM.Load(friendId);
+            }
+           SelectedFriendEditViewModel= friendVM;
         }
 
         //private void FriendEditViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)

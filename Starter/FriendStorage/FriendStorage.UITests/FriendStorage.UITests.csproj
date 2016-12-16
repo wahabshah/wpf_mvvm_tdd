@@ -63,7 +63,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\NofityPropertyChangedExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ViewModel\FriendEditViewModelTests.cs" />
     <Compile Include="ViewModel\MainViewModelTests.cs" />
     <Compile Include="ViewModel\NavigationItemViewModelTests.cs" />
     <Compile Include="ViewModel\NavigationViewModelTests.cs" />

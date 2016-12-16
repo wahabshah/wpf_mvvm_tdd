@@ -20,6 +20,7 @@ namespace FriendStorage.UI.ViewModel
         public NavigationViewModel(INavigationDataProvider dataService,IEventAggregator eventAggregator)
         {
             _dataService = dataService;
+            _eventAggregator = eventAggregator;
             Friends = new ObservableCollection<NavigationItemViewModel>();
         }     
         public void Load()
